@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cloud Expense Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 40px 20px;
+      color: #333;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #1a6b8a; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 30px; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    h2 { margin-bottom: 16px; font-size: 18px; color: #222; }
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1a6b8a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #155a75; }
+    .msg { margin-top: 10px; font-size: 14px; font-weight: bold; }
+    .msg.success { color: #2e7d32; }
+    .msg.error   { color: #c62828; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th {
+      background: #1a6b8a;
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    td { padding: 9px 12px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #f9f9f9; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .summary-card {
+      background: #e8f4f8;
+      border-radius: 6px;
+      padding: 14px;
+      text-align: center;
+    }
+    .summary-card .label { font-size: 13px; color: #555; }
+    .summary-card .amount { font-size: 20px; font-weight: bold; color: #1a6b8a; margin-top: 4px; }
+    .refresh-btn {
+      width: auto;
+      padding: 8px 20px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Cloud Expense Tracker</h1>
+  <p class="subtitle">INFO 4110 — Serverless Cloud Computing Project</p>
+
+  <!-- Add Expense Form -->
+  <div class="card">
+    <h2>Add Expense</h2>
+    <input type="text"   id="expenseName"   placeholder="Expense name (e.g. Coffee)" />
+    <input type="number" id="expenseAmount" placeholder="Amount (e.g. 4.50)" step="0.01" />
+    <select id="expenseCategory">
+      <option value="Food">Food</option>
+      <option value="Transport">Transport</option>
+      <option value="Shopping">Shopping</option>
+      <option value="Other">Other</option>
+    </select>
+    <button onclick="submitExpense()">Submit Expense</button>
+    <p id="submitMsg" class="msg"></p>
+  </div>
+
+  <!-- Category Summary -->
+  <div class="card">
+    <h2>Spending by Category</h2>
+    <button class="refresh-btn" onclick="loadSummary()">Refresh Summary</button>
+    <div id="summaryGrid" class="summary-grid"></div>
+  </div>
+
+  <!-- All Expenses Table -->
+  <div class="card">
+    <h2>All Expenses</h2>
+    <button class="refresh-btn" onclick="loadExpenses()">Refresh Expenses</button>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Amount</th><th>Category</th><th>Date</th></tr>
+      </thead>
+      <tbody id="expensesBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://59xle3sk0j.execute-api.us-east-1.amazonaws.com/prod/expenses';
+
+  async function submitExpense() {
+    const name     = document.getElementById('expenseName').value.trim();
+    const amount   = document.getElementById('expenseAmount').value.trim();
+    const category = document.getElementById('expenseCategory').value;
+    const msgEl    = document.getElementById('submitMsg');
+
+    if (!name || !amount) {
+      msgEl.textContent = 'Please fill in all fields.';
+      msgEl.className = 'msg error';
+      return;
+    }
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, amount: parseFloat(amount), category })
+      });
+      const data = await res.json();
+      msgEl.textContent = `Expense saved! ID: ${data.id}`;
+      msgEl.className = 'msg success';
+      document.getElementById('expenseName').value = '';
+      document.getElementById('expenseAmount').value = '';
+      loadExpenses();
+      loadSummary();
+    } catch (err) {
+      msgEl.textContent = 'Error saving expense. Please try again.';
+      msgEl.className = 'msg error';
+    }
+  }
+
+  async function loadExpenses() {
+    try {
+      const res   = await fetch(API_URL);
+      const items = await res.json();
+      const tbody = document.getElementById('expensesBody');
+      tbody.innerHTML = '';
+      items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+      items.forEach(item => {
+        tbody.innerHTML += `<tr>
+          <td>${item.name}</td>
+          <td>$${parseFloat(item.amount).toFixed(2)}</td>
+          <td>${item.category}</td>
+          <td>${item.timestamp}</td>
+        </tr>`;
+      });
+    } catch (err) {
+      console.error('Error loading expenses:', err);
+    }
+  }
+
+  async function loadSummary() {
+    try {
+      const res  = await fetch(API_URL + '?summary=true');
+      const data = await res.json();
+      const grid = document.getElementById('summaryGrid');
+      grid.innerHTML = '';
+      Object.entries(data).forEach(([cat, total]) => {
+        grid.innerHTML += `<div class="summary-card">
+          <div class="label">${cat}</div>
+          <div class="amount">$${total.toFixed(2)}</div>
+        </div>`;
+      });
+    } catch (err) {
+      console.error('Error loading summary:', err);
+    }
+  }
+
+  // Load data on page open
+  loadExpenses();
+  loadSummary();
+</script>
+</body>
+</html>
