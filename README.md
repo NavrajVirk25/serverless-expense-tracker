@@ -74,19 +74,3 @@ serverless-expense-tracker/
 | Region | us-east-1 |
 
 ---
-
-## Course Coverage
-
-| Course Topic | Implementation |
-|---|---|
-| Serverless Computing (Lecture 2) | AWS Lambda — no servers to manage |
-| Containerization (Lecture 3) | Compared and justified serverless over Docker |
-| Cloud Data Storage (Lectures 4 & 5) | DynamoDB as primary data store |
-| Data Analytics (Lectures 9 & 10) | Category spending summary feature |
-| Cloud Security (Lectures 11 & 12) | IAM least-privilege role |
-
----
-
-## Free Tier Usage
-
-All services used are within AWS Free Tier limits. Expected usage is well below thresholds for Lambda invocations, DynamoDB read/write units, API Gateway calls, and S3 storage.
