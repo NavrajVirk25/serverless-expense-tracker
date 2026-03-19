@@ -7,7 +7,8 @@ Group Project — Option 2: Implementation
 
 ## Overview
 
-A fully serverless web application that allows users to submit, store, and analyze personal expenses using AWS cloud services. 
+A fully serverless web application that allows users to submit, store, and analyze personal expenses using AWS cloud services.  
+
 ---
 
 ## Architecture
